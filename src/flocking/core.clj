@@ -49,13 +49,37 @@
                :dx dx
                :dy dy))))))
 
+(defn angle-with-mouse [x y]
+  (let [vec (normalise (- (mouse-x) x) (- (mouse-y) y))]
+    (if (pos? (last vec))
+      (+ (acos (first vec)))
+      (- (* 2 PI) (acos (first vec))))))
+
+(defn normalise [x y]
+  (let [m (mag x y)]
+    [(/ x m) (/ y m)]))
+
+(defn draw-boid [x y f]
+  (with-translation [x y]
+    (with-rotation [(angle-with-mouse x y)]
+      (triangle 0 0
+                10 (f (frame-count))
+                10 (- (f (frame-count)))))))
+
 (defn draw []
   (background 100)
   (swap! (state :boids) update-boids)
   (fill 255 50 50)
-
+  ;; (with-translation [120 120]
+  ;;   (with-rotation [(angle-with-mouse 120 120)]
+  ;;     (triangle 0 0 10 -10 10 10)))
+  ;; (text (str (angle-with-mouse 120 120) 10 10) 10 10)
+  ;; (text (str (first (normalise (- (mouse-x) 120) (- (mouse-y) 120)))
+  ;;            " "
+  ;;            (last (normalise (- (mouse-x) 120) (- (mouse-y) 120))))
+  ;;       10 20)
   (doseq [{:keys [x y]} @(state :boids)]
-    (triangle x y (+ x 10) (+ y 10) (+ x 10) (- y 10))))
+    (draw-boid x y #(* 10 (abs (sin (/ % 10)))))))
 
 (defn mouse-moved []
     (let [  x (mouse-x)
